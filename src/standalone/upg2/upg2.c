@@ -3,8 +3,6 @@
 
 int main(int argc, char* argv[]) 
 {
-
-
     int totalLength = 0; 
     for(int i = 0; i < argc; i++)
     {

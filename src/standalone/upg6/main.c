@@ -4,6 +4,8 @@
 
 #include "map.h"
 
+
+
 /* Recommended compile commmand:
  * 
  * gcc -Wall -Wextra -std=gnu99 -pedantic -g main.c map.c
@@ -12,8 +14,6 @@
  *
  * valgrind --tool=memcheck ./a.out
  */
-#error Read comments above, then remove this line.
-
 
 /* Can be used to inform compiler about unused parameters (prevent
  * warning). Useful when a funtion pointer expect a certain set of
@@ -91,7 +91,8 @@ int main()
     obj = map_find(&container, id);
 
     /*! if it was found, display it */
-YOUR CODE
+//YOUR CODE
+printf("Found: %s\n\n", obj);
   
     /* since we leave the value in the map we may use it again and
      * should not free the memory */
@@ -107,7 +108,8 @@ YOUR CODE
     obj = map_remove(&container, id);
 
     /*! if it was found, display it */
-YOUR CODE
+//YOUR CODE
+printf("Found: %s\n\n", obj);
     /* since we removed the value from the map we will never use it again and
      * must properly free the memory (if it was allocated) */
   }
@@ -120,5 +122,6 @@ YOUR CODE
   /*! free all remaining memory and remove from map */
   map_remove_if(&container, do_free, 0);
   
+printf("\n");
   return 0;
 }
