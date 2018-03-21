@@ -46,16 +46,25 @@ syscall_handler (struct intr_frame *f)
 {
   int32_t* esp = (int32_t*)f->esp;
   
-  switch ( 0 /* retrive syscall number */ )
+  switch ( esp[0] /* retrive syscall number */ )
   {
-    default:
-    {
+  case SYS_HALT:
+      halt(); 
+      break; 
+  case SYS_EXIT: 
+      break;
+  default:
+  {
       printf ("Executed an unknown system call!\n");
-      
       printf ("Stack top + 0: %d\n", esp[0]);
       printf ("Stack top + 1: %d\n", esp[1]);
-      
       thread_exit ();
     }
   }
+}
+
+void halt()
+{
+    printf("SYS_HALT\n");
+    power_off(); 
 }

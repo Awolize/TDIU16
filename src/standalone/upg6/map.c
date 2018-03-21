@@ -20,12 +20,11 @@ key_t map_insert(struct map* m, value_t v)
 
 value_t map_find(struct map* m, key_t k)
 {   
-    if(k < MAP_SIZE && k >= 0) // fixa gräns
+    if(k < MAP_SIZE && k >= 0) 
 	if(m->content[k] != NULL) 
 	    return m->content[k]; 
     
-    return NULL; 
-    
+    return NULL;     
 }
 
 value_t map_remove(struct map* m, key_t k)
@@ -40,6 +39,7 @@ value_t map_remove(struct map* m, key_t k)
     return NULL; 
 }
 
+// Antar att den fungerar, framtida Alex och Liam, detta kan vara fel. 
 void map_for_each(struct map* m, 
 		  void (*exec)(key_t k, value_t v, int aux), 
 		  int aux)
@@ -49,11 +49,13 @@ void map_for_each(struct map* m,
 	    exec(i, m->content[i], aux);
 }
 
+// Antar att den fungerar, framtida Alex och Liam, detta kan vara fel. 
 void map_remove_if(struct map* m, 
 		   bool (*cond)(key_t k, value_t v, int aux), 
 		   int aux)
 {
     for(int i = 0; i < MAP_SIZE; i++)
 	if (m->content[i] != NULL)
-	    cond(i, m->content[i], aux);
+	    if(cond(i, m->content[i], aux))
+		m->content[i] = NULL;
 }
