@@ -44,30 +44,31 @@ const int argc[] = {
 static void
 syscall_handler (struct intr_frame *f) 
 {
-  int32_t* esp = (int32_t*)f->esp;
-
-  switch ( esp[0] /* retrive syscall number */ )
-  {
-  case SYS_HALT:
-      halt(); 
-      break; 
-  case SYS_EXIT:
-      exit(esp[1]);
-      break;
-  case SYS_READ:
-      read(esp[1], (void*) esp[2], esp[3]);
-      break;
-  case SYS_WRITE:
-      break;	  
-  default:
-  {
-      printf("-------------------------------------\n");
-      printf ("Executed an unknown system call!\n");
-      printf ("Stack top + 0: %d\n", esp[0]);
-      printf ("Stack top + 1: %d\n", esp[1]);
-      thread_exit ();
+    int32_t* esp = (int32_t*)f->esp;
+  
+    switch ( esp[0] /* retrive syscall number */ )
+    {
+    case SYS_HALT:
+	halt(); 
+	break; 
+    case SYS_EXIT:
+	exit(esp[1]);
+	break;
+    case SYS_READ:
+	// returns unsinged int length
+	read(esp[1], (void*) esp[2], esp[3]);
+	break;
+    case SYS_WRITE:
+	write(esp[1], (void*) esp[2], esp[3]);
+	break;	  
+    default:
+    {
+	printf ("Executed an unknown system call!\n");
+	printf ("Stack top + 0: %d\n", esp[0]);
+	printf ("Stack top + 1: %d\n", esp[1]);
+	thread_exit ();
     }
-  }
+    }
 }
 
 void halt(void)
@@ -86,24 +87,33 @@ void exit(int status)
 int read (int fd, void *buffer, unsigned length)
 {
     printf("SYS_READ\n");
-    
+    unsigned len = 0;
+
     // Read from keyboard
     if(fd == STDIN_FILENO) 
     {
-	printf("Buffer:"); 
+	printf("Buffer: "); 
 	for(unsigned i = 0; i < length; i++) 
 	{
 	    //Make the buffer a char pointer and get one char then increment the pointer
 	    *((char*)buffer++) = input_getc(); 
-	    printf("%c", *((char*)(buffer-1))); 
+	    printf("%c", *((char*)(buffer-1)));
+	    len++;
 	}
+	printf("\n");
     }
-    return (int)length; 
+    return len; 
 }
-/*
+
 int write (int fd, const void *buffer, unsigned length)
 {
     printf("SYS_WRITE\n");
-    return length;
+    // Print from buffer
+    if(fd == STDOUT_FILENO) 
+    {
+	printf("Buffer: ");
+	putbuf((char*)buffer++, length);
+	printf("\n");
+    }
+    return (int)length; 
 }
-*/
