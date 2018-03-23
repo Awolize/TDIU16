@@ -55,19 +55,17 @@ syscall_handler (struct intr_frame *f)
 	exit(esp[1]);
 	break;
     case SYS_READ:
-	// returns unsinged int length
-	read(esp[1], (void*) esp[2], esp[3]);
+	// returns int length catched by my boi eax
+	f->eax = read(esp[1], (void*) esp[2], esp[3]);
 	break;
     case SYS_WRITE:
-	write(esp[1], (void*) esp[2], esp[3]);
+	f->eax = write(esp[1], (const void*) esp[2], esp[3]);
 	break;	  
     default:
-    {
 	printf ("Executed an unknown system call!\n");
 	printf ("Stack top + 0: %d\n", esp[0]);
 	printf ("Stack top + 1: %d\n", esp[1]);
 	thread_exit ();
-    }
     }
 }
 
@@ -77,43 +75,46 @@ void halt(void)
     power_off(); 
 }
 
-void exit(int status)
+void exit(int status) 
 {
     printf("SYS_EXIT, Status: %d\n", status);
     printf("Exiting thread: %s\n", thread_name());
     thread_exit();
 }
 
-int read (int fd, void *buffer, unsigned length)
+int read(int fd, void *buffer, unsigned length)
 {
-    printf("SYS_READ\n");
-    unsigned len = 0;
-
     // Read from keyboard
     if(fd == STDIN_FILENO) 
     {
-	printf("Buffer: "); 
-	for(unsigned i = 0; i < length; i++) 
+	printf("Reading: ");
+	int len = 0;
+	for(; len < (int)length; len++) 
 	{
 	    //Make the buffer a char pointer and get one char then increment the pointer
-	    *((char*)buffer++) = input_getc(); 
-	    printf("%c", *((char*)(buffer-1)));
-	    len++;
+	    *((char*)buffer) = input_getc(); 
+	    printf("%c", *((char*)(buffer)));
 	}
 	printf("\n");
+	return len; 
     }
-    return len; 
+    return -1; 
 }
 
-int write (int fd, const void *buffer, unsigned length)
+int open (const char *file)
 {
-    printf("SYS_WRITE\n");
+    
+}
+
+int write(int fd, const void *buffer, unsigned length)
+{
     // Print from buffer
-    if(fd == STDOUT_FILENO) 
+    if(fd == STDOUT_FILENO && length > 1) 
     {
-	printf("Buffer: ");
-	putbuf((char*)buffer++, length);
-	printf("\n");
+	printf("Writing from buffer: ");
+	putbuf((char*)buffer, length);
+	printf("\nLength: %d\n", length);
+	return (int)length; 
     }
-    return (int)length; 
+    return -1; 
 }
