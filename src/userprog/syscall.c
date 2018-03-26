@@ -16,6 +16,7 @@
 
 static void syscall_handler (struct intr_frame *);
 
+
 void
 syscall_init (void) 
 {
@@ -114,23 +115,23 @@ int write(int fd, const void *buffer, unsigned length)
     return -1; 
 }
 
-int open (const char* file)
+bool create (const char* file, unsigned initial_size)
+{
+    return filesys_create(file, initial_size);
+}
+
+int open(const char* file)
 {    
     struct file* f = filesys_open(file);
     if(f == NULL)
 	return -1;
     
-    int fd = addToMap(f); 
-    
-    return fd; 
-    
-    //
-	
+    return addToMap(file); 	
 }
 
-int addToMap(file* f)
+int addToMap(const char* file)
 {
-    thread_current()->map nånting?
-
+    struct map* mapPtr = &(thread_current()->fileMap);
+    int key = map_insert(mapPtr, file); 
     return key; 
 } 

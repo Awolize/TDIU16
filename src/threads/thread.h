@@ -96,6 +96,8 @@ struct thread
 
     /* YES! You may want to add stuff. But make note of point 2 above. */
       struct map fileMap; // VÅR CODE, 
+
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */

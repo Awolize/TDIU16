@@ -10,7 +10,7 @@ void map_init(struct map* m)
 	m->content[i] = NULL; 
 }
 
-key_t map_insert(struct map* m, value_t v)
+key_t map_insert(struct map* m, const value_t v)
 {
     for(int i = 2; i < MAP_SIZE; i++)
 	if(m->content[i] == NULL) 
