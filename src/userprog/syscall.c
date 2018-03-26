@@ -101,11 +101,6 @@ int read(int fd, void *buffer, unsigned length)
     return -1; 
 }
 
-int open (const char *file)
-{
-    
-}
-
 int write(int fd, const void *buffer, unsigned length)
 {
     // Print from buffer
@@ -114,7 +109,28 @@ int write(int fd, const void *buffer, unsigned length)
 	printf("Writing from buffer: ");
 	putbuf((char*)buffer, length);
 	printf("\nLength: %d\n", length);
-	return (int)length; 
-    }
+	return (int)length;   
+  }
     return -1; 
 }
+
+int open (const char* file)
+{    
+    struct file* f = filesys_open(file);
+    if(f == NULL)
+	return -1;
+    
+    int fd = addToMap(f); 
+    
+    return fd; 
+    
+    //
+	
+}
+
+int addToMap(file* f)
+{
+    thread_current()->map nånting?
+
+    return key; 
+} 

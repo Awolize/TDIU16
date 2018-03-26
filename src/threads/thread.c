@@ -95,6 +95,10 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
 
+  /* INIT OF THE FILE MAP */
+  map_init(&fileMap);
+  
+
   DEBUG_thread_init();
 }
 
