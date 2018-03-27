@@ -95,17 +95,13 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
 
-  /* INIT OF THE FILE MAP */
-  map_init(&(initial_thread->fileMap));
-  
-
   DEBUG_thread_init();
 }
 
 /* Does basic initialization of a newly created thread T as a blocked
    thread named NAME. */
 static void
-init_thread (struct thread *t, const char *name, int priority)
+init_thread (struct thread* t, const char* name, int priority)
 {
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
@@ -119,6 +115,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   /* YES! You may want add stuff here. */
+  map_init(&t->fileMap);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.

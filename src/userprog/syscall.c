@@ -61,7 +61,19 @@ syscall_handler (struct intr_frame *f)
 	break;
     case SYS_WRITE:
 	f->eax = write(esp[1], (const void*) esp[2], esp[3]);
-	break;	  
+	break;	 
+    case SYS_OPEN:
+	f->eax = open((const char*)esp[1]);
+	break;
+    case SYS_CLOSE:
+	close(esp[1]);
+	break;
+    case SYS_CREATE:
+	f->eax = create((const char*)esp[1], esp[2]);
+	break;
+    case SYS_REMOVE:
+	f->eax = remove((const char*)esp[1]);
+	break;
     default:
 	printf ("Executed an unknown system call!\n");
 	printf ("Stack top + 0: %d\n", esp[0]);
@@ -80,58 +92,82 @@ void exit(int status)
 {
     printf("SYS_EXIT, Status: %d\n", status);
     printf("Exiting thread: %s\n", thread_name());
+    //Close files???????
     thread_exit();
 }
 
-int read(int fd, void *buffer, unsigned length)
+int read(int fd, void* buffer, unsigned length)
 {
     // Read from keyboard
     if(fd == STDIN_FILENO) 
     {
-	printf("Reading: ");
-	int len = 0;
-	for(; len < (int)length; len++) 
+	// array int = *((char*)buffer)
+	//printf("Reading: ");
+	for(int len = 0; len < (int)length; len++) 
 	{
 	    //Make the buffer a char pointer and get one char then increment the pointer
 	    *((char*)buffer) = input_getc(); 
-	    printf("%c", *((char*)(buffer)));
+	    if(((char*)buffer)[len] == '\r') 
+		((char*)buffer)[len] = '\n'; 
+	    putbuf((char*)buffer+len, 1);
 	}
 	printf("\n");
 	return len; 
     }
+    else if(fd > 1) //Read file 
+    {
+	struct file* fp = map_find(&thread_current()->fileMap, fd);
+	return file_read(fp, buffer, length); //returns off_t which is the size of 
+    }
+
+
     return -1; 
 }
 
-int write(int fd, const void *buffer, unsigned length)
+int write(int fd, const void* buffer, unsigned length)
 {
     // Print from buffer
     if(fd == STDOUT_FILENO && length > 1) 
     {
-	printf("Writing from buffer: ");
+//	printf("Writing from buffer: ");
 	putbuf((char*)buffer, length);
-	printf("\nLength: %d\n", length);
+	// printf("\nLength: %d\n", length);
 	return (int)length;   
-  }
+    }
+    else if(fd > 1) //Write file 
+    {
+	struct file* fp = map_find(&thread_current()->fileMap, fd);
+	
+	return file_write(fp, buffer, length); //returns off_t which is the size of 
+    }
+    
     return -1; 
-}
-
-bool create (const char* file, unsigned initial_size)
-{
-    return filesys_create(file, initial_size);
 }
 
 int open(const char* file)
 {    
-    struct file* f = filesys_open(file);
-    if(f == NULL)
+    struct file* fp = filesys_open(file);
+    if(fp == NULL)
 	return -1;
-    
-    return addToMap(file); 	
+   
+    return map_insert(&thread_current()->fileMap, fp); //insert the file to the current thread's fileMap	
 }
 
-int addToMap(const char* file)
+void close(int fd)
 {
-    struct map* mapPtr = &(thread_current()->fileMap);
-    int key = map_insert(mapPtr, file); 
-    return key; 
-} 
+    if (map_find(&thread_current()->fileMap, fd) != NULL)  //Maybe not needed since fd will always be valid
+    {
+	filesys_close(map_find(&thread_current()->fileMap, fd));
+	map_remove(&thread_current()->fileMap, fd);
+    }
+}
+
+bool create(const char* file, unsigned initial_size)
+{
+    return filesys_create(file, initial_size);
+}
+
+bool remove(const char* file)
+{
+    return filesys_remove(file); 
+}

@@ -68,14 +68,13 @@
 #pragma once 
 #include <stdbool.h>
 #include <stddef.h> 
-#include "filesys/filesys.c"
+#include "filesys/filesys.h"
+#include "filesys/file.h"
 
-
-
-#define MAP_SIZE 18
+#define MAP_SIZE 16
 //#define PANIC() exit(1)
 
-typedef char* value_t;
+typedef struct file* value_t;
 typedef int key_t; 
 
 struct map
