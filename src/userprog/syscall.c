@@ -108,8 +108,8 @@ int open (const char *file)
 
 int write(int fd, const void *buffer, unsigned length)
 {
-    // Print from buffer
-    if(fd == STDOUT_FILENO && length > 1) 
+    // Print from buffer if its not empty
+    if(fd == STDOUT_FILENO && length >= 1) 
     {
 	printf("Writing from buffer: ");
 	putbuf((char*)buffer, length);
