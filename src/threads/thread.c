@@ -101,7 +101,7 @@ thread_init (void)
 /* Does basic initialization of a newly created thread T as a blocked
    thread named NAME. */
 static void
-init_thread (struct thread *t, const char *name, int priority)
+init_thread (struct thread* t, const char* name, int priority)
 {
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
@@ -115,6 +115,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   /* YES! You may want add stuff here. */
+  map_init(&t->fileMap);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
