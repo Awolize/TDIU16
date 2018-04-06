@@ -103,14 +103,17 @@ int read(int fd, void* buffer, unsigned length)
     {
 	// array int = *((char*)buffer)
 	//printf("Reading: ");
-	for(int len = 0; len < (int)length; len++) 
+	int len = 0;
+	for(; len < (int)length; len++) 
 	{
 	    //Make the buffer a char pointer and get one char then increment the pointer
 	    *((char*)buffer) = input_getc(); 
-	    if(((char*)buffer)[len] == '\r') 
-		((char*)buffer)[len] = '\n'; 
-	    putbuf((char*)buffer+len, 1);
+	    if(*((char*)buffer) == '\r') 
+		*((char*)buffer) = '\n'; 
+	    putbuf((char*)buffer, 1);
+	    ++(char*)buffer; 
 	}
+
 	printf("\n");
 	return len; 
     }
@@ -119,7 +122,6 @@ int read(int fd, void* buffer, unsigned length)
 	struct file* fp = map_find(&thread_current()->fileMap, fd);
 	return file_read(fp, buffer, length); //returns off_t which is the size of 
     }
-
 
     return -1; 
 }
@@ -137,7 +139,6 @@ int write(int fd, const void* buffer, unsigned length)
     else if(fd > 1) //Write file 
     {
 	struct file* fp = map_find(&thread_current()->fileMap, fd);
-	
 	return file_write(fp, buffer, length); //returns off_t which is the size of 
     }
     
