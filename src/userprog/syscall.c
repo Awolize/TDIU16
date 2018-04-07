@@ -126,6 +126,7 @@ int read(int fd, void* buffer, unsigned length)
     return -1; 
 }
 
+//pintos --fs-disk=2 -v -k -p ../examples/file_syscall_tests -a fs -- -f -q run fs
 int write(int fd, const void* buffer, unsigned length)
 {
     // Print from buffer if its not empty
