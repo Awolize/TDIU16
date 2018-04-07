@@ -111,13 +111,13 @@ int read(int fd, void* buffer, unsigned length)
 	    if(*((char*)buffer) == '\r') 
 		*((char*)buffer) = '\n'; 
 	    putbuf((char*)buffer, 1);
-	    ++(char*)buffer; 
+	    (char*)buffer++; 
 	}
 
 	printf("\n");
 	return len; 
     }
-    else if(fd > 1) //Read file 
+    else if(fd > 1 && fd < MAP_SIZE) //Read file 
     {
 	struct file* fp = map_find(&thread_current()->fileMap, fd);
 	return file_read(fp, buffer, length); //returns off_t which is the size of 
@@ -136,8 +136,9 @@ int write(int fd, const void* buffer, unsigned length)
 	// printf("\nLength: %d\n", length);
 	return (int)length;   
     }
-    else if(fd > 1) //Write file 
+    else if(fd > 1 && fd < MAP_SIZE) //Write file if its in the catalog
     {
+	
 	struct file* fp = map_find(&thread_current()->fileMap, fd);
 	return file_write(fp, buffer, length); //returns off_t which is the size of 
     }
