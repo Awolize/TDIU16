@@ -10,5 +10,8 @@ int open (const char *file);
 void close(int fd);
 bool create (const char *file, unsigned initial_size);
 bool remove(const char *file);
+void seek (int fd, unsigned position);
+unsigned tell (int fd);
+int filesize (int fd);
 #endif /* userprog/syscall.h */
 

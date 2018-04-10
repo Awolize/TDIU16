@@ -239,6 +239,13 @@ process_cleanup (void)
    */
   printf("%s: exit(%d)\n", thread_name(), status);
   
+  // ------------------------ OUR CODE ----------------------
+  for(int fd = 2; fd < MAP_SIZE; fd++) 
+  {
+      filesys_close(map_find(&cur->fileMap, fd));
+  }
+  //----------------------------------------------------------
+  
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   if (pd != NULL) 
@@ -254,6 +261,9 @@ process_cleanup (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }  
+
+
+
   debug("%s#%d: process_cleanup() DONE with status %d\n",
         cur->name, cur->tid, status);
 }

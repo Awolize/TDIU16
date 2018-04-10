@@ -11,7 +11,7 @@ void map_init(struct map* m)
 key_t map_insert(struct map* m, const value_t v)
 {
     for(int i = 2; i < MAP_SIZE+2; i++)
-	if(m->content[i-2] == NULL) 
+	if(m->content[i-2] == NULL) // hitta ledig plats 
 	{
 	    m->content[i-2] = v;
 	    return i; 

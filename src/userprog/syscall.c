@@ -74,6 +74,15 @@ syscall_handler (struct intr_frame *f)
     case SYS_REMOVE:
 	f->eax = remove((const char*)esp[1]);
 	break;
+    case SYS_SEEK:
+	seek(esp[1], esp[2]);
+	break;
+    case SYS_TELL:
+	f->eax = tell(esp[1]);
+	break;
+    case SYS_FILESIZE:
+	f->eax = filesize(esp[1]);
+	break;
     default:
 	printf ("Executed an unknown system call!\n");
 	printf ("Stack top + 0: %d\n", esp[0]);
@@ -101,8 +110,6 @@ int read(int fd, void* buffer, unsigned length)
     // Read from keyboard
     if(fd == STDIN_FILENO) 
     {
-	// array int = *((char*)buffer)
-	//printf("Reading: ");
 	int len = 0;
 	for(; len < (int)length; len++) 
 	{
@@ -114,19 +121,18 @@ int read(int fd, void* buffer, unsigned length)
 	    (char*)buffer++; 
 	}
 
-	printf("\n");
 	return len; 
     }
     else if(fd > 1 && fd < MAP_SIZE) //Read file 
     {
 	struct file* fp = map_find(&thread_current()->fileMap, fd);
-	return file_read(fp, buffer, length); //returns off_t which is the size of 
+	if(fp != NULL) 
+	    return file_read(fp, buffer, length); //returns off_t which is the size of 
     }
 
     return -1; 
 }
 
-//pintos --fs-disk=2 -v -k -p ../examples/file_syscall_tests -a fs -- -f -q run fs
 int write(int fd, const void* buffer, unsigned length)
 {
     // Print from buffer if its not empty
@@ -152,13 +158,17 @@ int open(const char* file)
     struct file* fp = filesys_open(file);
     if(fp == NULL)
 	return -1;
-   
-    return map_insert(&thread_current()->fileMap, fp); //insert the file to the current thread's fileMap	
+
+    int i = map_insert(&thread_current()->fileMap, fp); //insert the file to the current thread's fileMap	
+    if(i == -1) 
+        filesys_close(fp);
+    
+    return i; 
 }
 
-void close(int fd)
+void close(int fd) 
 {
-    if (map_find(&thread_current()->fileMap, fd) != NULL)  //Maybe not needed since fd will always be valid
+    if (fd > 1) //lita inte på usermode, fd kan vara fel
     {
 	filesys_close(map_find(&thread_current()->fileMap, fd));
 	map_remove(&thread_current()->fileMap, fd);
@@ -173,4 +183,23 @@ bool create(const char* file, unsigned initial_size)
 bool remove(const char* file)
 {
     return filesys_remove(file); 
+}
+
+void seek(int fd, unsigned position)
+{
+    struct file* fp = map_find(&thread_current()->fileMap, fd);
+    file_seek(fp, position);
+
+}
+unsigned tell(int fd)
+{
+    struct file* fp = map_find(&thread_current()->fileMap, fd);
+    return file_tell(fp);
+
+}
+
+int filesize(int fd)
+{
+    struct file* fp = map_find(&thread_current()->fileMap, fd);
+    return file_length(fp);
 }
