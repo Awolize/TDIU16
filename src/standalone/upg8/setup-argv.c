@@ -49,7 +49,7 @@
   gcc -m32 -Wall -Wextra -std=gnu99 -g setup-argv.c
   
 */
-#error Read comments above, then remove this line.
+
 
 #define true 1
 #define false 0
@@ -192,35 +192,36 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   char* cmd_line_on_stack;
   char* ptr_save;
   int i = 0;
-  
+
   /* calculate the bytes needed to store the command_line */
-  line_size = ??? ;
+  line_size = strlen(command_line);
   STACK_DEBUG("# line_size = %d\n", line_size);
 
   /* round up to make it even divisible by 4 */
-  line_size = ??? ;
+  line_size += (line_size % 4 == 0) ? 0 : 4 - (line_size % 4); //made by liam
   STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
 
   /* calculate how many words the command_line contain */
-  argc = ??? ;
+  argc = count_args(command_line, " ");
+
   STACK_DEBUG("# argc = %d\n", argc);
 
   /* calculate the size needed on our simulated stack */
-  total_size = ??? ;
+  total_size = ;
   STACK_DEBUG("# total_size = %d\n", total_size);
   
 
   /* calculate where the final stack top will be located */
-  esp = ??? ;
+//  esp = ??? ;
   
   /* setup return address and argument count */
-  esp->ret = ??? ;
-  esp->argc = ??? ;
+// esp->ret = ??? ;
+//  esp->argc = ??? ;
   /* calculate where in the memory the argv array starts */
-  esp->argv = ??? ;
+//  esp->argv = ??? ;
   
   /* calculate where in the memory the words is stored */
-  cmd_line_on_stack = ??? ;
+//  cmd_line_on_stack = ??? ;
 
   /* copy the command_line to where it should be in the stack */
 

@@ -101,7 +101,7 @@ void exit(int status)
 {
     printf("SYS_EXIT, Status: %d\n", status);
     printf("Exiting thread: %s\n", thread_name());
-    //Close files???????
+    //Close files??????? // done in process_cleanup
     thread_exit();
 }
 
@@ -138,9 +138,7 @@ int write(int fd, const void* buffer, unsigned length)
     // Print from buffer if its not empty
     if(fd == STDOUT_FILENO && length >= 1) 
     {
-//	printf("Writing from buffer: ");
 	putbuf((char*)buffer, length);
-	// printf("\nLength: %d\n", length);
 	return (int)length;   
     }
     else if(fd > 1 && fd < MAP_SIZE) //Write file if its in the catalog
