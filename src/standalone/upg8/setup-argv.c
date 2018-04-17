@@ -177,57 +177,67 @@ int count_args(const char* buf, const char* delimeters)
 
 void* setup_main_stack(const char* command_line, void* stack_top)
 {
-  /* Variable "esp" stores an address, and at the memory loaction
-   * pointed out by that address a "struct main_args" is found.
-   * That is: "esp" is a pointer to "struct main_args" */
-  struct main_args* esp;
-  int argc;
-  int total_size;
-  int line_size;
-  int cmdl_size;
+    /* Variable "esp" stores an address, and at the memory loaction
+     * pointed out by that address a "struct main_args" is found.
+     * That is: "esp" is a pointer to "struct main_args" */
+    struct main_args* esp;
+    int argc;
+    int total_size;
+    int line_size;
+    //int cmdl_size;
 
-  /* "cmd_line_on_stack" and "ptr_save" are variables that each store
-   * one address, and at that address (the first) char (of a possible
-   * sequence) can be found. */
-  char* cmd_line_on_stack;
-  char* ptr_save;
-  int i = 0;
+    /* "cmd_line_on_stack" and "ptr_save" are variables that each store
+     * one address, and at that address (the first) char (of a possible
+     * sequence) can be found. */
+    char* cmd_line_on_stack;
+    char* ptr_save;
+    int i = 0;
 
-  /* calculate the bytes needed to store the command_line */
-  line_size = strlen(command_line);
-  STACK_DEBUG("# line_size = %d\n", line_size);
+    /* calculate the bytes needed to store the command_line */
+    line_size = strlen(command_line + 1);
+    STACK_DEBUG("# line_size = %d\n", line_size);
 
-  /* round up to make it even divisible by 4 */
-  line_size += (line_size % 4 == 0) ? 0 : 4 - (line_size % 4); //made by liam
-  STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
+    /* round up to make it even divisible by 4 */
+    line_size += (line_size % 4 == 0) ? 0 : 4 - (line_size % 4); //made by liam
+    STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
 
-  /* calculate how many words the command_line contain */
-  argc = count_args(command_line, " ");
+    /* calculate how many words the command_line contain */
+    argc = count_args(command_line, " ");
+    STACK_DEBUG("# argc = %d\n", argc);
 
-  STACK_DEBUG("# argc = %d\n", argc);
+    /* calculate the size needed on our simulated stack */
+    total_size = line_size + 16 + argc * 4;
+    STACK_DEBUG("# total_size = %d\n", total_size);
+  
+    /* calculate where the final stack top will be located */
+    esp = (struct main_args*)((char*)stack_top - total_size);
+  
+    /* setup return address and argument count */
+    esp->ret = NULL;
+    esp->argc = argc;
 
-  /* calculate the size needed on our simulated stack */
-  total_size = ;
-  STACK_DEBUG("# total_size = %d\n", total_size);
+    /* calculate where in the memory the argv array starts */
+    esp->argv = (char**)(esp + 1);
+
+    /* calculate where in the memory the words is stored */    
+    cmd_line_on_stack = stack_top - line_size;
+    
+    /* copy the command_line to where it should be in the stack */
+    strncpy(cmd_line_on_stack, command_line, line_size);
+
+    // size_t strncpy(char *dst, const char *src, size_t dstsize);
   
 
-  /* calculate where the final stack top will be located */
-//  esp = ??? ;
-  
-  /* setup return address and argument count */
-// esp->ret = ??? ;
-//  esp->argc = ??? ;
-  /* calculate where in the memory the argv array starts */
-//  esp->argv = ??? ;
-  
-  /* calculate where in the memory the words is stored */
-//  cmd_line_on_stack = ??? ;
-
-  /* copy the command_line to where it should be in the stack */
-
-  /* build argv array and insert null-characters after each word */
-  
-  return esp; /* the new stack top */
+    /* build argv array and insert null-characters after each word */
+//    ptr_save = cmd_line_on_stack;
+    for (char* token = strtok_r (cmd_line_on_stack, " ", &ptr_save); token != NULL;
+	 token = strtok_r (NULL, " ", &ptr_save))
+    {
+	printf ("’%s’\n", token);
+	esp->argv[i++] = token;
+	
+    }
+    return esp; /* the new stack top */
 }
 
 /* The C way to do constants ... */
@@ -260,7 +270,7 @@ int main()
   /* print the argument vector to see if it worked */
   for (i = 0; i < esp->argc; ++i)
   {
-    printf("argv[%d] = %s\n", i, esp->argv[i]);
+      printf("argv[%d] = %s\n", i, esp->argv[i]);
   }
   printf("argv[%d] = %p\n", i, esp->argv[i]);
 
