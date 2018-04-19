@@ -1,6 +1,8 @@
 #include <debug.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 
 #include "userprog/gdt.h"      /* SEL_* constants */
 #include "userprog/process.h"
@@ -18,6 +20,8 @@
 #include "threads/synch.h"
 #include "threads/malloc.h"
 #include "lib/kernel/list.h"
+
+#include "lib/string.h"
 
 #include "userprog/flist.h"
 #include "userprog/plist.h"
@@ -55,6 +59,9 @@ struct parameters_to_start_process
 
 static void
 start_process(struct parameters_to_start_process* parameters) NO_RETURN;
+void* setup_main_stack(const char* command_line, void* stack_top);
+int count_args(const char* buf, const char* delimeters);
+bool exists_in(char c, const char* d);
 
 /* Starts a new proccess by creating a new thread to run it. The
    process is loaded from the file specified in the COMMAND_LINE and
@@ -148,14 +155,19 @@ start_process (struct parameters_to_start_process* parameters)
        "pretend" the arguments are present on the stack. A normal
        C-function expects the stack to contain, in order, the return
        address, the first argument, the second argument etc. */
-    
-    HACK if_.esp -= 12; /* Unacceptable solution. */
+
+//----------------- Vår kod -----------------------------
+
+      if_.esp = setup_main_stack(parameters->command_line, if_.esp);
+
+
+      //HACK if_.esp -= 12; /* Unacceptable solution. */
 
     /* The stack and stack pointer should be setup correct just before
        the process start, so this is the place to dump stack content
        for debug purposes. Disable the dump when it works. */
     
-//    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
+      dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
 
   }
 
@@ -185,6 +197,109 @@ start_process (struct parameters_to_start_process* parameters)
   NOT_REACHED ();
 }
 
+// ----------------------------- Vår kod -------------------------------------
+
+struct main_args
+{
+  void (*ret)(void);
+
+  int argc;
+
+  char** argv;
+};
+
+bool exists_in(char c, const char* d)
+{
+  int i = 0;
+  while (d[i] != '\0' && d[i] != c)
+    ++i;
+  return (d[i] == c);
+}
+
+int count_args(const char* buf, const char* delimeters)
+{
+  int i = 0;
+  bool prev_was_delim;
+  bool cur_is_delim = true;
+  int argc = 0;
+
+  while (buf[i] != '\0')
+  {
+    prev_was_delim = cur_is_delim;
+    cur_is_delim = exists_in(buf[i], delimeters);
+    argc += (prev_was_delim && !cur_is_delim);
+    ++i;
+  }
+  return argc;
+}
+
+/* Replace calls to STACK_DEBUG with calls to printf. All such calls
+ * easily removed later by replacing with nothing. */
+#define STACK_DEBUG(...) debug(__VA_ARGS__)
+
+void* setup_main_stack(const char* command_line, void* stack_top)
+{
+    /* Variable "esp" stores an address, and at the memory loaction
+     * pointed out by that address a "struct main_args" is found.
+     * That is: "esp" is a pointer to "struct main_args" */
+    struct main_args* esp;
+    int argc;
+    int total_size;
+    int line_size;
+    //int cmdl_size;
+
+    /* "cmd_line_on_stack" and "ptr_save" are variables that each store
+     * one address, and at that address (the first) char (of a possible
+     * sequence) can be found. */
+    char* cmd_line_on_stack;
+    char* ptr_save;
+    int i = 0;
+
+    /* calculate the bytes needed to store the command_line */
+    line_size = strlen(command_line);
+    STACK_DEBUG("# line_size = %d\n", line_size);
+
+    /* round up to make it even divisible by 4 */
+    line_size += (line_size % 4 == 0) ? 0 : 4 - (line_size % 4); //made by liam
+    STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
+
+    /* calculate how many words the command_line contain */
+    argc = count_args(command_line, " ");
+    STACK_DEBUG("# argc = %d\n", argc);
+
+    /* calculate the size needed on our simulated stack */
+    total_size = line_size + 16 + argc * 4;
+    STACK_DEBUG("# total_size = %d\n", total_size);
+  
+    /* calculate where the final stack top will be located */
+    esp = (struct main_args*)((char*)stack_top - total_size);
+  
+    /* setup return address and argument count */
+    esp->ret = NULL;
+    esp->argc = argc;
+
+    /* calculate where in the memory the argv array starts */
+    esp->argv = (char**)(esp + 1);
+
+    /* calculate where in the memory the words is stored */    
+    cmd_line_on_stack = ((char*)stack_top - line_size);
+    
+    /* copy the command_line to where it should be in the stack */
+    strlcpy(cmd_line_on_stack, command_line, line_size);
+
+    /* build argv array and insert null-characters after each word */
+    // ptr_save = cmd_line_on_stack;
+    for (char* token = strtok_r(cmd_line_on_stack, " ", &ptr_save); token != NULL;
+	 token = strtok_r(NULL, " ", &ptr_save)) //loops through every token thats not null and sets it to
+    {
+	printf ("’%s’\n", token);
+	esp->argv[i++] = token;
+    }	
+    
+    return esp; /* the new stack top */
+}
+
+//----------------------------------------------------------------------------------------------------
 /* Wait for process `child_id' to die and then return its exit
    status. If it was terminated by the kernel (i.e. killed due to an
    exception), return -1. If `child_id' is invalid or if it was not a
