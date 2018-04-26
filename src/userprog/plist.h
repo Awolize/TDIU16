@@ -29,5 +29,44 @@
      
  */
 
+/* do not forget the guard against multiple includes */
+#pragma once 
+#include <stdbool.h>
+#include <stddef.h> 
+
+#define PLISTMAP_SIZE 128
+#define PANIC() exit(1)
+
+struct processMeta
+{
+    bool free = false;
+    int proc_id = 0;
+    int parent_id = 0;
+    int exit_status = 0;
+    bool alive = false;
+    bool parent_alive = 0;
+};
+
+process_init(struct process_meta* p);
+
+typedef struct process_meta* value_p;
+typedef int key_p; 
+
+struct plist
+{
+    value_p content[PLISTMAP_SIZE];
+};
+
+void plist_init(struct plist* m);
+key_p plist_insert(struct plist* m, value_p v);
+value_p plist_find(struct plist* m, key_p k);
+value_p plist_remove(struct plist* m, key_p k);
+void plist_for_each(struct plist* m, 
+		  void (*exec)(key_p k, value_p v, int aux), 
+		  int aux);
+void plist_remove_if(struct map* m, 
+		   bool (*cond)(key_p k, value_p v, int aux), 
+		   int aux);
+
 
 #endif

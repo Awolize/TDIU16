@@ -83,7 +83,7 @@ typedef int tid_t;
    ready state is on the run queue, whereas only a thread in the
    blocked state is on a semaphore wait list. */
 struct thread
-  {
+{
     /* Owned by thread.c. */
     tid_t tid;                          /* Thread identifier. */
     enum thread_status status;          /* Thread state. */
@@ -95,7 +95,7 @@ struct thread
     struct list_elem elem;              /* List element. */
 
     /* YES! You may want to add stuff. But make note of point 2 above. */
-      struct map fileMap; // VÅR CODE, 
+    struct map fileMap; // VÅR CODE, 
 
 
 #ifdef USERPROG
@@ -105,7 +105,7 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
-  };
+};
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
