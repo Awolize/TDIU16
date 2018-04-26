@@ -56,8 +56,11 @@ struct parameters_to_start_process
 {
     char* command_line;
     
+    // Our boys
     struct semaphore sema; 
-    int ret; 
+    int ret; //kanske inte behövs
+
+    int parent_id; 
 };
 
 static void
@@ -94,7 +97,8 @@ process_execute (const char *command_line)
 
 
     strlcpy_first_word (debug_name, command_line, 64);
-  
+    
+    arguments.parent_id = thread_current()->tid; 
     /* SCHEDULES function `start_process' to run (LATER) */
     thread_id = thread_create (debug_name, PRI_DEFAULT,
 			       (thread_func*)start_process, &arguments);
@@ -107,10 +111,10 @@ process_execute (const char *command_line)
     //------------------------- init sema ---------------------
     sema_init(&arguments.sema, 0);
  
-    if(process_id != -1)
+    if(process_id != -1) // if valid process started correctly, sema down 
     {
 	sema_down(&arguments.sema);
-	process_id = arguments.ret; 
+	process_id = arguments.ret; //kanske inte behövs 
     }
     
   
@@ -171,7 +175,7 @@ start_process (struct parameters_to_start_process* parameters)
 	//----------------- Vår kod -----------------------------
 
 	if_.esp = setup_main_stack(parameters->command_line, if_.esp);
-	parameters->ret = thread_current()->tid; 
+	parameters->ret = thread_current()->tid; //kanske inte behövs
 	
 	//HACK if_.esp -= 12; /* Unacceptable solution. */
 
@@ -190,7 +194,7 @@ start_process (struct parameters_to_start_process* parameters)
   
     /* If load fail, quit. Load may fail for several reasons.
        Some simple examples:
-       - File doeas not exist
+       - File does not exist
        - File do not contain a valid program
        - Not enough memory
     */
@@ -200,6 +204,16 @@ start_process (struct parameters_to_start_process* parameters)
     }
     sema_up(&parameters->sema); 
 
+    //-------------------- Insert to process list ----------------------
+    
+    int key = plist_insert(pl, thread_current()->tid, parameter->parent_id);
+    
+    debug("Inserted process: %d /n Parent id: %d /n At position: %d", 
+	  thread_current()->tid, 
+	  parameter->parent_id,
+	  key);
+
+	
     /* Start the user process by simulating a return from an interrupt,
        implemented by intr_exit (in threads/intr-stubs.S). Because
        intr_exit takes all of its arguments on the stack in the form of
@@ -268,7 +282,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
     int i = 0;
 
     /* calculate the bytes needed to store the command_line */
-    line_size = strlen(command_line);
+    line_size = strlen(command_line); // + 1???
     STACK_DEBUG("# line_size = %d\n", line_size);
 
     /* round up to make it even divisible by 4 */

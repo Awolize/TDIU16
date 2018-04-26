@@ -39,17 +39,15 @@
 
 struct processMeta
 {
-    bool free = false;
-    int proc_id = 0;
-    int parent_id = 0;
-    int exit_status = 0;
-    bool alive = false;
-    bool parent_alive = 0;
+    //bool free; not needed since we use NULL value to say if its in plist or not 
+    int proc_id;
+    int parent_id;
+    int exit_status;
+    bool alive;
+    bool parent_alive;
 };
 
-process_init(struct process_meta* p);
-
-typedef struct process_meta* value_p;
+typedef struct processMeta* value_p;
 typedef int key_p; 
 
 struct plist
@@ -58,7 +56,7 @@ struct plist
 };
 
 void plist_init(struct plist* m);
-key_p plist_insert(struct plist* m, value_p v);
+key_p plist_insert(struct plist* m, int proc_id, int parent_id);
 value_p plist_find(struct plist* m, key_p k);
 value_p plist_remove(struct plist* m, key_p k);
 void plist_for_each(struct plist* m, 

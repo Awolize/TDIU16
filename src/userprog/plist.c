@@ -2,6 +2,7 @@
 
 #include "plist.h"
 
+struct plist pl; 
 
 void plist_init(struct plist* m)
 {
@@ -9,12 +10,20 @@ void plist_init(struct plist* m)
 	m->content[i] = NULL; 
 }
 
-key_p plist_insert(struct plist* m, value_p v)
+key_p plist_insert(struct plist* m, int proc_id, int parent_id)
 {
+    struct processMeta* process; 
+    
+    process->proc_id = proc_id;
+    process->parent_id = parent_id; 
+    process->exit_status = -1;
+    process->alive = true; 
+    process->parent_alive = true; 
+    
     for(int i = 0; i < PLISTMAP_SIZE; i++)
-	if(m->content[i] == NULL) 
+	if(m->content[i] == NULL) //check if free or null
 	{
-	    m->content[i] = v;
+	    m->content[i] = process;
 	    return i; 
 	} 
     return -1; 
