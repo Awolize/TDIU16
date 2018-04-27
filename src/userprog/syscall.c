@@ -56,7 +56,7 @@ syscall_handler (struct intr_frame *f)
 	exit(esp[1]);
 	break;
     case SYS_READ:
-	// returns int length catched by my boi eax
+	// returns int length catched by my boye eax
 	f->eax = read(esp[1], (void*) esp[2], esp[3]);
 	break;
     case SYS_WRITE:

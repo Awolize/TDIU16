@@ -29,6 +29,7 @@
 /* HACK defines code you must remove and implement in a proper way */
 #define HACK
 
+struct plist pl; 
 
 /* This function is called at boot time (threads/init.c) to initialize
  * the process subsystem. */
@@ -54,12 +55,11 @@ void process_print_list()
 
 struct parameters_to_start_process
 {
-    char* command_line;
+     char* command_line;
     
     // Our boys
     struct semaphore sema; 
     int ret; //kanske inte behövs
-
     int parent_id; 
 };
 
@@ -206,11 +206,11 @@ start_process (struct parameters_to_start_process* parameters)
 
     //-------------------- Insert to process list ----------------------
     
-    int key = plist_insert(pl, thread_current()->tid, parameter->parent_id);
+    int key = plist_insert(&parameters->pl, thread_current()->tid, &parameters->parent_id);
     
     debug("Inserted process: %d /n Parent id: %d /n At position: %d", 
 	  thread_current()->tid, 
-	  parameter->parent_id,
+	  parameters->parent_id,
 	  key);
 
 	
