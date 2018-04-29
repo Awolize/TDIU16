@@ -26,9 +26,9 @@ key_p plist_insert(struct plist* m, int proc_id, int parent_id)
 }
 
 value_p plist_find(struct plist* m, key_p k)
-{   
-    if(k < PLISTMAP_SIZE && k >= 0) 
-	return m->content[k];    
+{
+    // if(k < PLISTMAP_SIZE && k >= 0) 
+	return m->content[k];
 }
 
 void plist_remove(struct plist* m, key_p k)
@@ -36,24 +36,34 @@ void plist_remove(struct plist* m, key_p k)
     if(k < PLISTMAP_SIZE && k >= 0)
 	m->content[k].alive = false; 
     
+    bool hasChildAlive = false;
     for(int i = 0; i < PLISTMAP_SIZE; i++) 
-    {
 	if(m->content[i].parent_id == m->content[k].proc_id) 
+	{
 	    m->content[i].parent_alive = false; 
-    }
-    
-    if(REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-        
-
+	    if (m->content[i].alive == true)
+		hasChildAlive = true;
+	}
+    if(!hasChildAlive)
+	m->content[k].free = true;
 }
 
+void plist_print(const struct plist* m)
+{
+    printf("PROCESS INFORMATION:\n");
+    for(int i = 0; i < PLISTMAP_SIZE; i++)
+	if (m->content[i].free == false)
+	    printf("id: %i, parent_id: %i, exit_status: %i\n", m->content[i].proc_id, m->content[i].parent_id, m->content[i].exit_status);
+}
+
+/*
 // Antar att den fungerar, framtida Alex och Liam, detta kan vara fel. 
 void plist_for_each(struct plist* m, 
 		  void (*exec)(key_p k, value_p v, int aux), 
 		  int aux)
 {
     for(int i = 0; i < PLISTMAP_SIZE; i++)
-	if (m->content[i] != NULL)
+	if (m->content[i].free)
 	    exec(i, m->content[i], aux);
 }
 
@@ -63,8 +73,8 @@ void plist_remove_if(struct plist* m,
 		   int aux)
 {
     for(int i = 0; i < PLISTMAP_SIZE; i++)
-	if (m->content[i] != NULL)
+	if (m->content[i].free)
 	    if(cond(i, m->content[i], aux))
 		m->content[i] = NULL;
 }
-
+*/

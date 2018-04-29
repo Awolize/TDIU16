@@ -58,12 +58,14 @@ void plist_init(struct plist* m);
 key_p plist_insert(struct plist* m, int proc_id, int parent_id);
 value_p plist_find(struct plist* m, key_p k);
 void plist_remove(struct plist* m, key_p k);
-void plist_for_each(struct plist* m, 
+/*void plist_for_each(struct plist* m, 
 		  void (*exec)(key_p k, value_p v, int aux), 
 		  int aux);
-void plist_remove_if(struct plis*t m, 
+void plist_remove_if(struct plist* m, 
 		   bool (*cond)(key_p k, value_p v, int aux), 
 		   int aux);
+*/
+void plist_print(const struct plist* m);
 
 
 #endif

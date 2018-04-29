@@ -44,12 +44,14 @@ void process_init(void)
  * from thread_exit - do not call cleanup twice! */
 void process_exit(int status UNUSED)
 {
+// exit_status = status;
 }
 
 /* Print a list of all running processes. The list shall include all
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
+    plist_print(&pl);
 }
 
 
@@ -206,7 +208,7 @@ start_process (struct parameters_to_start_process* parameters)
 
     //-------------------- Insert to process list ----------------------
     
-    int key = plist_insert(&parameters->pl, thread_current()->tid, &parameters->parent_id);
+    int key = plist_insert(&pl, thread_current()->tid, parameters->parent_id);
     
     debug("Inserted process: %d /n Parent id: %d /n At position: %d", 
 	  thread_current()->tid, 

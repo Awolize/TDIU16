@@ -83,6 +83,12 @@ syscall_handler (struct intr_frame *f)
     case SYS_FILESIZE:
 	f->eax = filesize(esp[1]);
 	break;
+    case SYS_EXEC:
+	f->eax = exec((const char*)esp[1])
+	break;
+    case SYS_SLEEP:
+	sleep(esp[1])
+	break;
     default:
 	printf ("Executed an unknown system call!\n");
 	printf ("Stack top + 0: %d\n", esp[0]);
@@ -201,3 +207,7 @@ int filesize(int fd)
     struct file* fp = map_find(&thread_current()->fileMap, fd);
     return file_length(fp);
 }
+
+
+
+
