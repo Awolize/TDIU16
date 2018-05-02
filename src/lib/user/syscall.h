@@ -35,7 +35,7 @@ unsigned tell (int fd);
 void close (int fd);
 
 // ---------- Our code -----------
-void sleep(int millis);
+//void sleep(int millis);
 void plist (void);
 
 

@@ -13,6 +13,8 @@
 #include "userprog/pagedir.h"
 #include "userprog/process.h"
 #include "devices/input.h"
+#include "plist.h"
+
 
 static void syscall_handler (struct intr_frame *);
 
@@ -84,11 +86,15 @@ syscall_handler (struct intr_frame *f)
 	f->eax = filesize(esp[1]);
 	break;
     case SYS_EXEC:
-	f->eax = exec((const char*)esp[1])
+	f->eax = exec((const char*)esp[1]);
 	break;
+    case SYS_PLIST:
+	plist(); 
+	break;
+/*
     case SYS_SLEEP:
-	sleep(esp[1])
-	break;
+	sleep(esp[1]);
+	break;*/
     default:
 	printf ("Executed an unknown system call!\n");
 	printf ("Stack top + 0: %d\n", esp[0]);
@@ -107,7 +113,6 @@ void exit(int status)
 {
     printf("SYS_EXIT, Status: %d\n", status);
     printf("Exiting thread: %s\n", thread_name());
-    //Close files??????? // done in process_cleanup
     thread_exit();
 }
 
@@ -208,6 +213,14 @@ int filesize(int fd)
     return file_length(fp);
 }
 
+int exec(const char* file)
+{
+    return process_execute(file);
+}
 
+void plist(void)
+{
+    process_print_list(); 
+}
 
 

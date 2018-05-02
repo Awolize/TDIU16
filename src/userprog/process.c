@@ -35,6 +35,7 @@ struct plist pl;
  * the process subsystem. */
 void process_init(void)
 {
+    plist_init(&pl);
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -51,7 +52,7 @@ void process_exit(int status UNUSED)
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
-    plist_print(&pl);
+   plist_print(&pl);
 }
 
 
@@ -181,6 +182,16 @@ start_process (struct parameters_to_start_process* parameters)
 	
 	//HACK if_.esp -= 12; /* Unacceptable solution. */
 
+	    //-------------------- Insert to process list ----------------------
+
+	int key = plist_insert(&pl, thread_current()->tid, parameters->parent_id);
+
+
+	debug("Inserted process: %d Parent id: %d At position: %d \n", 
+	      thread_current()->tid, 
+	      parameters->parent_id,
+	      key);
+	
 	/* The stack and stack pointer should be setup correct just before
 	   the process start, so this is the place to dump stack content
 	   for debug purposes. Disable the dump when it works. */
@@ -193,7 +204,6 @@ start_process (struct parameters_to_start_process* parameters)
 	  thread_current()->tid,
 	  parameters->command_line);
   
-  
     /* If load fail, quit. Load may fail for several reasons.
        Some simple examples:
        - File does not exist
@@ -204,16 +214,7 @@ start_process (struct parameters_to_start_process* parameters)
     {
 	thread_exit();
     }
-    sema_up(&parameters->sema); 
-
-    //-------------------- Insert to process list ----------------------
-    
-    int key = plist_insert(&pl, thread_current()->tid, parameters->parent_id);
-    
-    debug("Inserted process: %d /n Parent id: %d /n At position: %d", 
-	  thread_current()->tid, 
-	  parameters->parent_id,
-	  key);
+    sema_up(&parameters->sema);
 
 	
     /* Start the user process by simulating a return from an interrupt,
@@ -285,19 +286,19 @@ void* setup_main_stack(const char* command_line, void* stack_top)
 
     /* calculate the bytes needed to store the command_line */
     line_size = strlen(command_line); // + 1???
-    STACK_DEBUG("# line_size = %d\n", line_size);
+    //STACK_DEBUG("# line_size = %d\n", line_size);
 
     /* round up to make it even divisible by 4 */
     line_size += (line_size % 4 == 0) ? 0 : 4 - (line_size % 4); //made by liam
-    STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
+    //STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
 
     /* calculate how many words the command_line contain */
     argc = count_args(command_line, " ");
-    STACK_DEBUG("# argc = %d\n", argc);
+    //STACK_DEBUG("# argc = %d\n", argc);
 
     /* calculate the size needed on our simulated stack */
     total_size = line_size + 16 + argc * 4;
-    STACK_DEBUG("# total_size = %d\n", total_size);
+    //STACK_DEBUG("# total_size = %d\n", total_size);
   
     /* calculate where the final stack top will be located */
     esp = (struct main_args*)((char*)stack_top - total_size);
@@ -383,10 +384,12 @@ process_cleanup (void)
     printf("%s: exit(%d)\n", thread_name(), status);
   
     // ------------------------ OUR CODE ----------------------
-    for(int fd = 2; fd < MAP_SIZE; fd++) 
+    for(int fd = 2; fd < MAP_SIZE; fd++) //Removes files
     {
 	filesys_close(map_find(&cur->fileMap, fd));
     }
+
+    plist_remove(&pl, cur->tid); //removes the process from plist pl
     //----------------------------------------------------------
   
     /* Destroy the current process's page directory and switch back

@@ -13,8 +13,9 @@ bool remove(const char *file);
 void seek (int fd, unsigned position);
 unsigned tell (int fd);
 int filesize (int fd);
-pid_t exec(const char* file);
-void sleep(int millis);
+int exec(const char* file);
+void plist(void); 
+//void sleep(int millis);
 
 #endif /* userprog/syscall.h */
 
