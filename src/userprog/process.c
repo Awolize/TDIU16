@@ -100,8 +100,9 @@ process_execute (const char *command_line)
 
 
     strlcpy_first_word (debug_name, command_line, 64);
-    
+     sema_init(&arguments.sema, 0);   
     arguments.parent_id = thread_current()->tid; 
+    arguments.ret = -1;
     /* SCHEDULES function `start_process' to run (LATER) */
     thread_id = thread_create (debug_name, PRI_DEFAULT,
 			       (thread_func*)start_process, &arguments);
@@ -112,7 +113,7 @@ process_execute (const char *command_line)
 
     //power_off();
     //------------------------- init sema ---------------------
-    sema_init(&arguments.sema, 0);
+
  
     if(process_id != -1) // if valid process started correctly, sema down 
     {
@@ -183,7 +184,7 @@ start_process (struct parameters_to_start_process* parameters)
 	//HACK if_.esp -= 12; /* Unacceptable solution. */
 
 	    //-------------------- Insert to process list ----------------------
-
+	
 	int key = plist_insert(&pl, thread_current()->tid, parameters->parent_id);
 
 
@@ -199,11 +200,13 @@ start_process (struct parameters_to_start_process* parameters)
 	// dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
 
     }
+
     debug("%s#%d: start_process(\"%s\") DONE\n",
 	  thread_current()->name,
 	  thread_current()->tid,
 	  parameters->command_line);
-  
+
+    sema_up(&parameters->sema);
     /* If load fail, quit. Load may fail for several reasons.
        Some simple examples:
        - File does not exist
@@ -214,7 +217,7 @@ start_process (struct parameters_to_start_process* parameters)
     {
 	thread_exit();
     }
-    sema_up(&parameters->sema);
+    
 
 	
     /* Start the user process by simulating a return from an interrupt,
@@ -388,8 +391,10 @@ process_cleanup (void)
     {
 	filesys_close(map_find(&cur->fileMap, fd));
     }
+    
 
     plist_remove(&pl, cur->tid); //removes the process from plist pl
+    //plist_print(&pl);
     //----------------------------------------------------------
   
     /* Destroy the current process's page directory and switch back
@@ -407,11 +412,11 @@ process_cleanup (void)
 	pagedir_activate (NULL);
 	pagedir_destroy (pd);
     }  
-
-
+ 
 
     debug("%s#%d: process_cleanup() DONE with status %d\n",
 	  cur->name, cur->tid, status);
+
 }
 
 /* Sets up the CPU for running user code in the current

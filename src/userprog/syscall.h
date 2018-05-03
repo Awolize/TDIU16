@@ -15,7 +15,7 @@ unsigned tell (int fd);
 int filesize (int fd);
 int exec(const char* file);
 void plist(void); 
-//void sleep(int millis);
+void sleep(int64_t ms);
 
 #endif /* userprog/syscall.h */
 

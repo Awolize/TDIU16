@@ -14,6 +14,7 @@
 #include "userprog/process.h"
 #include "devices/input.h"
 #include "plist.h"
+#include "devices/timer.h"
 
 
 static void syscall_handler (struct intr_frame *);
@@ -91,10 +92,9 @@ syscall_handler (struct intr_frame *f)
     case SYS_PLIST:
 	plist(); 
 	break;
-/*
     case SYS_SLEEP:
 	sleep(esp[1]);
-	break;*/
+	break;
     default:
 	printf ("Executed an unknown system call!\n");
 	printf ("Stack top + 0: %d\n", esp[0]);
@@ -112,7 +112,7 @@ void halt(void)
 void exit(int status) 
 {
     printf("SYS_EXIT, Status: %d\n", status);
-    printf("Exiting thread: %s\n", thread_name());
+    //printf("Exiting thread: %s\n", thread_name());
     thread_exit();
 }
 
@@ -223,4 +223,7 @@ void plist(void)
     process_print_list(); 
 }
 
-
+void sleep(int64_t ms)
+{
+    timer_msleep(ms);
+}

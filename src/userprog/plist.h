@@ -33,8 +33,10 @@
 #pragma once 
 #include <stdbool.h>
 #include <stddef.h> 
+#include "threads/synch.h"
 
-#define PLISTMAP_SIZE 128
+#define PLISTMAP_SIZE 512
+
 
 struct processMeta
 {
