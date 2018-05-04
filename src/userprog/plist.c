@@ -33,10 +33,8 @@ key_p plist_insert(struct plist* m, int proc_id, int parent_id)
     return -1; 
 }
 
-void plist_remove(struct plist* m, key_p id) 
+void plist_remove(struct plist* m, key_p id) // MAN FRIAR PROC OM FÖR OCH EN SJÄLV ÄR !ALIVE
 {
- 
-    //plist_print(m); 
     debug("------- REMOVING PROCESS ------: %d \n", id); 
 
     bool hasChildAlive = false;
@@ -49,15 +47,13 @@ void plist_remove(struct plist* m, key_p id)
 	{
 	    m->content[i].parent_alive = false;
 	    if(m->content[i].alive)
-
+		hasChildAlive = true;
 	}
 
     if(!hasChildAlive) //if no children alive free the process 
      	for(int i = 0; i < PLISTMAP_SIZE; i++)  
      	    if(m->content[i].proc_id == id)  
     		m->content[i].free = true; 
-    
-    
 }
 
 void plist_print(const struct plist* m) 

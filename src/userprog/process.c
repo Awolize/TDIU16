@@ -104,21 +104,17 @@ process_execute (const char *command_line)
 
 
     strlcpy_first_word (debug_name, command_line, 64);
-     sema_init(&arguments.sema, 0);   
+    //------------------------- init sema ---------------------
+    sema_init(&arguments.sema, 0);   
     arguments.parent_id = thread_current()->tid; 
     arguments.ret = -1;
+
     /* SCHEDULES function `start_process' to run (LATER) */
     thread_id = thread_create (debug_name, PRI_DEFAULT,
 			       (thread_func*)start_process, &arguments);
 
     process_id = thread_id;
 
-    /* AVOID bad stuff by turning off. YOU will fix this! */
-
-    //power_off();
-    //------------------------- init sema ---------------------
-
- 
     if(process_id != -1) // if valid process started correctly, sema down 
     {
 	sema_down(&arguments.sema);
@@ -347,15 +343,20 @@ void* setup_main_stack(const char* command_line, void* stack_top)
    mechanism between parent and child is established. */
 int
 process_wait (int child_id) 
-{
+{ 
     int status = -1;
     struct thread *cur = thread_current ();
-
+    
+    if(cur->tid == 1) //if its kernel 
+	return status;
+    
+  
     debug("%s#%d: process_wait(%d) ENTERED\n",
 	  cur->name, cur->tid, child_id);
     /* Yes! You need to do something good here ! */
     struct processMeta *p = plist_find(&pl, child_id);
-    
+    plist_print(&pl);
+    debug("%d", p);
     debug("Found process %d\n", p->proc_id);
     debug("Id of current process: %d\n", cur->tid);
     debug("Id of found process parent: %d\n", p->parent_id); 
@@ -369,7 +370,7 @@ process_wait (int child_id)
 	  p->free);
     
 
-    if(cur->tid != 1) //if its not is kernel 
+ 
 	if(p != NULL && cur->tid == p->parent_id && !p->free)
 	{
 	    debug("Inside if statement\n");
@@ -423,8 +424,8 @@ process_cleanup (void)
     }
     
 
-    plist_remove(&pl, cur->tid); //removes the process from plist pl
-    //plist_print(&pl);
+    plist_remove(&pl, cur->tid); // might set the the process.free = true depending on the children 
+
     //----------------------------------------------------------
   
     /* Destroy the current process's page directory and switch back
