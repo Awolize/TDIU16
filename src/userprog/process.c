@@ -45,10 +45,11 @@ void process_init(void)
  * from thread_exit - do not call cleanup twice! */
 void process_exit(int status)
 {
+    debug("SETTING STATUS TO %d", status); 
     plist_set_status(&pl, thread_current()->tid, status);
-
-
-    sema_up(&(plist_find(&pl, thread_current()->tid)->sema));
+    struct processMeta* p = plist_find(&pl, thread_current()->tid);
+    if (p != NULL)
+	sema_up(&p->psema);
 }
 
 /* Print a list of all running processes. The list shall include all
@@ -327,7 +328,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
     for (char* token = strtok_r(cmd_line_on_stack, " ", &ptr_save); token != NULL;
 	 token = strtok_r(NULL, " ", &ptr_save)) //loops through every token thats not null and sets it to
     {
-	printf ("’%s’\n", token);
+	debug ("’%s’\n", token);
 	esp->argv[i++] = token;
     }	
     
@@ -354,13 +355,30 @@ process_wait (int child_id)
 	  cur->name, cur->tid, child_id);
     /* Yes! You need to do something good here ! */
     struct processMeta *p = plist_find(&pl, child_id);
+    
+    debug("Found process %d\n", p->proc_id);
+    debug("Id of current process: %d\n", cur->tid);
+    debug("Id of found process parent: %d\n", p->parent_id); 
+    
+    debug("id: %i, parent_id: %i, exit_status: %i, parent_alive: %d, alive: %d, free: %d \n",
+	  p->proc_id,
+	  p->parent_id, 
+	  p->exit_status, 
+	  p->parent_alive,
+	  p->alive,
+	  p->free);
+    
 
-    if(p != NULL && cur->tid == p->parent_id)
-    {
-	sema_down(&p->sema); 
-	status = p->exit_status;
-	p->free = true; 
-    }
+    if(cur->tid != 1) //if its not is kernel 
+	if(p != NULL && cur->tid == p->parent_id && !p->free)
+	{
+	    debug("Inside if statement\n");
+	    sema_down(&p->psema); 
+	    debug("Sema down done"); 
+	    status = p->exit_status;
+	    p->free = true; 
+	
+	}
  
     debug("%s#%d: process_wait(%d) RETURNS %d\n",
 	  cur->name, cur->tid, child_id, status);
@@ -396,7 +414,7 @@ process_cleanup (void)
      * that may sometimes poweroff as soon as process_wait() returns,
      * possibly before the printf is completed.)
      */
-    printf("%s: exit(%d)\n", thread_name(), status);
+    debug("%s: exit(%d)\n", thread_name(), status);
   
     // ------------------------ OUR CODE ----------------------
     for(int fd = 2; fd < MAP_SIZE; fd++) //Removes files

@@ -46,7 +46,7 @@ struct processMeta
     int exit_status;
     bool alive;
     bool parent_alive;
-    struct semaphore sema; 
+    struct semaphore psema; 
 };
 
 typedef struct processMeta value_p;

@@ -33,22 +33,23 @@ key_p plist_insert(struct plist* m, int proc_id, int parent_id)
     return -1; 
 }
 
-void plist_remove(struct plist* m, key_p id) //is key right??? 
+void plist_remove(struct plist* m, key_p id) 
 {
  
     //plist_print(m); 
-    printf("------- REMOVING PROCESS ------: %d \n", id); 
+    debug("------- REMOVING PROCESS ------: %d \n", id); 
 
     bool hasChildAlive = false;
     for(int i = 0; i < PLISTMAP_SIZE; i++)
 	if(m->content[i].proc_id == id && m->content[i].free == false)  //sets the process to not alive
+	{
 	    m->content[i].alive = false; 
-
+	}
 	else if(m->content[i].parent_id == id && m->content[i].parent_alive && !m->content[i].free) //sets the children to have no parent alive
 	{
 	    m->content[i].parent_alive = false;
 	    if(m->content[i].alive)
-		hasChildAlive = true; 
+
 	}
 
     if(!hasChildAlive) //if no children alive free the process 
@@ -61,17 +62,17 @@ void plist_remove(struct plist* m, key_p id) //is key right???
 
 void plist_print(const struct plist* m) 
 {
-    printf("\n----------- PROCESS INFORMATION -----------\n");
+    debug("\n----------- PROCESS INFORMATION -----------\n");
     for(int i = 0; i < PLISTMAP_SIZE; i++)
 	if (!(m->content[i].free))
-	    printf("id: %i, parent_id: %i, exit_status: %i, parent_alive: %d, alive: %d \n",
+	    debug("id: %i, parent_id: %i, exit_status: %i, parent_alive: %d, alive: %d \n",
 		   m->content[i].proc_id,
 		   m->content[i].parent_id, 
 		   m->content[i].exit_status, 
 		   m->content[i].parent_alive,
 		   m->content[i].alive);
     
-    printf("\n");
+    debug("\n");
 }
 
 value_p* plist_find(struct plist* m, key_p id)

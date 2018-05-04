@@ -95,26 +95,26 @@ syscall_handler (struct intr_frame *f)
     case SYS_SLEEP:
 	sleep(esp[1]);
 	break;
-    case SYS_WAIT: // doesnt exist yet
-	f->eax = wait(esp[1]); // plz_no_function
+    case SYS_WAIT:
+	f->eax = wait(esp[1]);
 	break;
     default:
-	printf ("Executed an unknown system call!\n");
-	printf ("Stack top + 0: %d\n", esp[0]);
-	printf ("Stack top + 1: %d\n", esp[1]);
+	debug ("Executed an unknown system call!\n");
+	debug ("Stack top + 0: %d\n", esp[0]);
+	debug ("Stack top + 1: %d\n", esp[1]);
 	thread_exit ();
     }
 }
 
 void halt(void)
 {
-    printf("SYS_HALT\n");
+    debug("SYS_HALT\n");
     power_off(); 
 }
 
 void exit(int status) 
 {
-    printf("SYS_EXIT, Status: %d\n", status);
+    debug("SYS_EXIT, Status: %d\n", status);
     //printf("Exiting thread: %s\n", thread_name());
     thread_exit();
 }
