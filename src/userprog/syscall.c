@@ -95,6 +95,9 @@ syscall_handler (struct intr_frame *f)
     case SYS_SLEEP:
 	sleep(esp[1]);
 	break;
+    case SYS_WAIT: // doesnt exist yet
+	f->eax = wait(esp[1]); // plz_no_function
+	break;
     default:
 	printf ("Executed an unknown system call!\n");
 	printf ("Stack top + 0: %d\n", esp[0]);
@@ -223,7 +226,12 @@ void plist(void)
     process_print_list(); 
 }
 
-void sleep(int64_t ms)
+void sleep(int millis)
 {
-    timer_msleep(ms);
+    timer_msleep(millis);
+}
+
+int wait(int id)
+{
+   return process_wait(id);
 }

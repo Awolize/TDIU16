@@ -35,7 +35,6 @@ enum
 // ------------ OUR ------------
     SYS_SLEEP,
     SYS_PLIST
-
   };
 
 #endif /* lib/syscall-nr.h */

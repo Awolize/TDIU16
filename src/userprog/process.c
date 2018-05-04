@@ -43,9 +43,12 @@ void process_init(void)
  * instead. Note however that all cleanup after a process must be done
  * in process_cleanup, and that process_cleanup are already called
  * from thread_exit - do not call cleanup twice! */
-void process_exit(int status UNUSED)
+void process_exit(int status)
 {
-// exit_status = status;
+    plist_set_status(&pl, thread_current()->tid, status);
+
+
+    sema_up(&(plist_find(&pl, thread_current()->tid)->sema));
 }
 
 /* Print a list of all running processes. The list shall include all
@@ -350,6 +353,15 @@ process_wait (int child_id)
     debug("%s#%d: process_wait(%d) ENTERED\n",
 	  cur->name, cur->tid, child_id);
     /* Yes! You need to do something good here ! */
+    struct processMeta *p = plist_find(&pl, child_id);
+
+    if(p != NULL && cur->tid == p->parent_id)
+    {
+	sema_down(&p->sema); 
+	status = p->exit_status;
+	p->free = true; 
+    }
+ 
     debug("%s#%d: process_wait(%d) RETURNS %d\n",
 	  cur->name, cur->tid, child_id, status);
   
