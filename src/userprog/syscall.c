@@ -115,7 +115,7 @@ void halt(void)
 void exit(int status) 
 {
     debug("SYS_EXIT, Status: %d\n", status);
-    //printf("Exiting thread: %s\n", thread_name());
+    process_exit(status);
     thread_exit();
 }
 
@@ -222,7 +222,7 @@ int exec(const char* file)
 }
 
 void plist(void)
-{
+{ 
     process_print_list(); 
 }
 
@@ -233,5 +233,6 @@ void sleep(int millis)
 
 int wait(int id)
 {
-   return process_wait(id);
+    debug("SYS_WAIT on id %d\n", id); 
+    return process_wait(id);
 }

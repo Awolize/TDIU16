@@ -37,6 +37,7 @@
 
 #define PLISTMAP_SIZE 128
 
+extern struct lock plock;
 
 struct processMeta
 {

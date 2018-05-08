@@ -45,28 +45,25 @@ void process_init(void)
  * from thread_exit - do not call cleanup twice! */
 void process_exit(int status)
 {
-    debug("SETTING STATUS TO %d", status); 
-    plist_set_status(&pl, thread_current()->tid, status);
     struct processMeta* p = plist_find(&pl, thread_current()->tid);
-    if (p != NULL)
-	sema_up(&p->psema);
+    p->exit_status = status; 
 }
 
 /* Print a list of all running processes. The list shall include all
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
-   plist_print(&pl);
+    plist_print(&pl);
 }
 
 
 struct parameters_to_start_process
 {
-     char* command_line;
+    char* command_line;
     
     // Our boys
-    struct semaphore sema; 
-    int ret; //kanske inte behövs
+    struct semaphore sema;
+    int ret;
     int parent_id; 
 };
 
@@ -101,24 +98,21 @@ process_execute (const char *command_line)
     /* COPY command line out of parent process memory */
     arguments.command_line = malloc(command_line_size);
     strlcpy(arguments.command_line, command_line, command_line_size);
+    strlcpy_first_word(debug_name, command_line, 64);
 
-
-    strlcpy_first_word (debug_name, command_line, 64);
     //------------------------- init sema ---------------------
     sema_init(&arguments.sema, 0);   
     arguments.parent_id = thread_current()->tid; 
     arguments.ret = -1;
 
     /* SCHEDULES function `start_process' to run (LATER) */
-    thread_id = thread_create (debug_name, PRI_DEFAULT,
-			       (thread_func*)start_process, &arguments);
-
+    thread_id = thread_create (debug_name, PRI_DEFAULT, (thread_func*)start_process, &arguments);
     process_id = thread_id;
 
     if(process_id != -1) // if valid process started correctly, sema down 
     {
 	sema_down(&arguments.sema);
-	process_id = arguments.ret; //kanske inte behövs 
+	process_id = arguments.ret; 
     }
     
   
@@ -152,13 +146,12 @@ start_process (struct parameters_to_start_process* parameters)
 	  parameters->command_line);
   
     /* Initialize interrupt frame and load executable. */
-    memset (&if_, 0, sizeof if_);
+    memset (&if_, 0, sizeof if_); 
     if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
     if_.cs = SEL_UCSEG;
     if_.eflags = FLAG_IF | FLAG_MBS;
-
     success = load (file_name, &if_.eip, &if_.esp);
-
+    
     debug("%s#%d: start_process(...): load returned %d\n",
 	  thread_current()->name,
 	  thread_current()->tid,
@@ -183,7 +176,7 @@ start_process (struct parameters_to_start_process* parameters)
 	
 	//HACK if_.esp -= 12; /* Unacceptable solution. */
 
-	    //-------------------- Insert to process list ----------------------
+	//-------------------- Insert to process list ----------------------
 	
 	int key = plist_insert(&pl, thread_current()->tid, parameters->parent_id);
 
@@ -217,8 +210,6 @@ start_process (struct parameters_to_start_process* parameters)
     {
 	thread_exit();
     }
-    
-
 	
     /* Start the user process by simulating a return from an interrupt,
        implemented by intr_exit (in threads/intr-stubs.S). Because
@@ -288,7 +279,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
     int i = 0;
 
     /* calculate the bytes needed to store the command_line */
-    line_size = strlen(command_line); // + 1???
+    line_size = strlen(command_line) + 1;//???
     //STACK_DEBUG("# line_size = %d\n", line_size);
 
     /* round up to make it even divisible by 4 */
@@ -346,43 +337,23 @@ process_wait (int child_id)
 { 
     int status = -1;
     struct thread *cur = thread_current ();
-    
+
+    /*
     if(cur->tid == 1) //if its kernel 
 	return status;
-    
-  
-    debug("%s#%d: process_wait(%d) ENTERED\n",
-	  cur->name, cur->tid, child_id);
-    /* Yes! You need to do something good here ! */
-    struct processMeta *p = plist_find(&pl, child_id);
-    plist_print(&pl);
-    debug("%d", p);
-    debug("Found process %d\n", p->proc_id);
-    debug("Id of current process: %d\n", cur->tid);
-    debug("Id of found process parent: %d\n", p->parent_id); 
-    
-    debug("id: %i, parent_id: %i, exit_status: %i, parent_alive: %d, alive: %d, free: %d \n",
-	  p->proc_id,
-	  p->parent_id, 
-	  p->exit_status, 
-	  p->parent_alive,
-	  p->alive,
-	  p->free);
-    
+    */
 
- 
-	if(p != NULL && cur->tid == p->parent_id && !p->free)
-	{
-	    debug("Inside if statement\n");
-	    sema_down(&p->psema); 
-	    debug("Sema down done"); 
-	    status = p->exit_status;
-	    p->free = true; 
-	
-	}
- 
-    debug("%s#%d: process_wait(%d) RETURNS %d\n",
-	  cur->name, cur->tid, child_id, status);
+    // process_print_list();
+
+    debug("%s#%d: process_wait(%d) ENTERED\n", cur->name, cur->tid, child_id);
+    struct processMeta *p = plist_find(&pl, child_id);
+    if(p != NULL && cur->tid == p->parent_id && !p->free && p->parent_alive)
+    { 
+	sema_down(&p->psema);
+	status = p->exit_status;
+	p->free = true; 
+    }
+    debug("%s#%d: process_wait(%d) RETURNS %d\n", cur->name, cur->tid, child_id, status);
   
     return status;
 }
@@ -415,17 +386,23 @@ process_cleanup (void)
      * that may sometimes poweroff as soon as process_wait() returns,
      * possibly before the printf is completed.)
      */
-    debug("%s: exit(%d)\n", thread_name(), status);
+
+    struct processMeta* p = plist_find(&pl, cur->tid);  
+    if(p != NULL) 
+	status = p->exit_status; 
+
+   printf("%s: exit(%d)\n", thread_name(), status);
   
     // ------------------------ OUR CODE ----------------------
+
     for(int fd = 2; fd < MAP_SIZE; fd++) //Removes files
-    {
 	filesys_close(map_find(&cur->fileMap, fd));
+
+    if(p != NULL)
+    {
+	plist_remove(&pl, cur->tid); // might set the the process.free = true depending on the children 
+	sema_up(&p->psema); 
     }
-    
-
-    plist_remove(&pl, cur->tid); // might set the the process.free = true depending on the children 
-
     //----------------------------------------------------------
   
     /* Destroy the current process's page directory and switch back
